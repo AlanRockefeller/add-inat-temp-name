@@ -1,22 +1,51 @@
 {
   "manifest_version": 3,
   "name": "iNat Add Temp Name",
-  "version": "0.1",
-  "description": "Adds a button next to Provisional Species Name / Species Name Override observation fields to create the provisional taxon on iNaturalist.",
+  "version": "0.2",
+  "description": "Create provisional (temp) fungal names on iNaturalist from observations, one at a time or in batches.",
+  "action": {
+    "default_title": "Batch add temp names",
+    "default_popup": "popup.html"
+  },
   "host_permissions": [
     "https://www.inaturalist.org/*",
     "https://api.inaturalist.org/*"
   ],
   "content_scripts": [
     {
-      "matches": ["https://www.inaturalist.org/observations/*"],
-      "js": ["common.js", "observation.js"],
-      "css": ["observation.css"],
+      "matches": [
+        "https://www.inaturalist.org/observations/*"
+      ],
+      "js": [
+        "common.js",
+        "observation.js"
+      ],
+      "css": [
+        "observation.css"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://www.inaturalist.org/taxa/new*"],
-      "js": ["common.js", "taxon_new.js"],
+      "matches": [
+        "https://www.inaturalist.org/taxa/new*"
+      ],
+      "js": [
+        "common.js",
+        "taxon_new.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.inaturalist.org/taxa*"
+      ],
+      "exclude_matches": [
+        "https://www.inaturalist.org/taxa/new*"
+      ],
+      "js": [
+        "common.js",
+        "taxon_result.js"
+      ],
       "run_at": "document_idle"
     }
   ],

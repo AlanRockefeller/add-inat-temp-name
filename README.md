@@ -1,7 +1,8 @@
-# iNat Add Temp Name version 0.1 - Alan Rockefeller - October 21, 2026
+# iNat Add Temp Name version 0.2 - Alan Rockefeller - October 21, 2026
 
 A browser extension for Chrome and Firefox that makes it faster to add new provisional ("temp") fungal
-names to the iNaturalist taxonomy, straight from an observation that needs a name created for it.
+names to the iNaturalist taxonomy, straight from an observation that needs a name created for it, or
+in bulk from a list of observations.
 
 ## Who it is for
 
@@ -65,7 +66,53 @@ step fails, the banner turns red and says which step failed. For example, it fai
 couldn't be selected or the Provisional checkbox never appeared. You can then finish that step by
 hand.
 
-**The extension never clicks Save Changes.** Review the form, then save it yourself.
+From an observation page, **the extension never clicks Save Changes.** Review the form, then save it
+yourself.
+
+### Batch mode: many names at once
+
+Click the extension's icon in the browser toolbar to open the **Batch add temp names** page.
+
+1. **Paste a list of observations.** You can mix any of these, one per line:
+   - observation numbers, like `334924034`
+   - observation URLs, like `https://www.inaturalist.org/observations/334924034`
+   - iNaturalist observation search URLs. Up to 1,000 observations are loaded per search. For example,
+     this search finds observations with a provisional name but no **New Temporary Name Created**
+     field:
+     ```
+     https://www.inaturalist.org/observations?field:Provisional%20Species%20Name=&without_field=New%20Temporary%20Name%20Created
+     ```
+2. Click **Load observations.** The extension reads every observation's **Provisional Species Name**
+   and **Species Name Override** fields and lists each name once. If several observations have the same
+   name, the change comment lists all of their URLs. It then runs the same checks as the button, at about
+   one API request per second as iNaturalist asks. Each name gets a status:
+
+   | Status | Meaning |
+   | --- | --- |
+   | Ready | Valid, doesn't exist yet, and the parent was found. Selected by default |
+   | Already exists | Links to the existing taxon |
+   | Bad format | Not in the form `Genus sp. 'epithet'` |
+   | Parent not found | No taxon on iNaturalist matches the first word of the name |
+
+   Observations with neither field, or that couldn't be loaded, are listed under the table.
+3. **Review the table** and untick any names you don't want to create.
+4. Click **Start.** A separate form window opens and works through the selected names one at a time,
+   filling in each form exactly like the observation-page button does. What happens next depends on
+   the **Create automatically** checkbox:
+   - **Unchecked (default):** you review each form and click **Save Changes** yourself. When the save
+     succeeds, the next name opens automatically. If the save fails, fix the form and save again, or
+     click **Skip this name**.
+   - **Checked:** the extension clicks **Save Changes** for every name without stopping. It asks you to
+     confirm first. Before saving, it double-checks that the name, parent and Provisional checkbox are
+     all set as expected. After each save it reads the result. If iNaturalist shows the new taxon,
+     the row is marked **Created** with a link to it. If iNaturalist shows the form again, the row is
+     marked **Failed** with iNaturalist's error message. If no result arrives within 90 seconds, the
+     row is marked failed so you can check it.
+
+   Click **Stop** at any time. Failed names stay selected, so clicking **Start** again retries just
+   those. If you aren't logged in, or the form can't be found, the run stops instead of failing every
+   name. The form can go missing if iNaturalist shows a security check. Keep the form window open
+   (you can move it aside) until the run finishes.
 
 ## How to use it
 
@@ -78,6 +125,10 @@ hand.
      `Genus sp. 'epithet'`.
 4. In the new tab, wait for the banner to turn green.
 5. Check the filled-in form, then click **Save Changes**.
+
+For many names, use the toolbar icon to open batch mode (see above). Load the observations, review the
+table, then click **Start**. Tick **Create automatically** first only if you want to skip reviewing
+each form.
 
 ## Installation
 
@@ -108,19 +159,22 @@ Developer Edition and Nightly can instead install unsigned add-ons, if you set
 
 ## Permissions and privacy
 
-The extension only runs on `www.inaturalist.org` observation pages and the new taxon page. It only
-contacts `api.inaturalist.org`, to check names and look up parent taxa. It collects no data and sends
-nothing anywhere else.
+The extension only runs on `www.inaturalist.org` observation and taxon pages, plus its own batch page.
+It only contacts `api.inaturalist.org` (to load observations, check names and look up parent taxa) and
+`www.inaturalist.org` (the new taxon form). It collects no data and sends nothing anywhere else.
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
 | `manifest.json` | Extension manifest (Manifest V3, works in Chrome and Firefox) |
-| `common.js` | Shared helpers: name normalization, the provisional name format, waiting utilities |
+| `common.js` | Shared helpers: name checks, iNat API lookups, change comment, waiting utilities |
 | `observation.js` | Adds the button on observation pages and runs the checks |
 | `observation.css` | Styling for the button and status messages |
-| `taxon_new.js` | Fills in the new taxon form |
+| `taxon_new.js` | Fills in the new taxon form, and saves it in batch auto-create mode |
+| `taxon_result.js` | After a batch save, reports whether the taxon was created or the save failed |
+| `batch.html`, `batch.js`, `batch.css` | The batch page |
+| `popup.html`, `popup.js` | Opens the batch page when you click the toolbar icon |
 
 ## License
 

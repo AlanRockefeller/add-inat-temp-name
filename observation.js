@@ -1,9 +1,6 @@
 // Runs on observation pages. Adds an "Add temp name" button to the
 // Provisional Species Name and Species Name Override observation fields.
 ( ( ) => {
-  const FIELD_NAMES = ["provisional species name", "species name override"];
-  const API = "https://api.inaturalist.org/v1";
-
   function observationId( ) {
     const m = window.location.pathname.match( /^\/observations\/(\d+)/ );
     return m ? m[1] : null;
@@ -18,40 +15,12 @@
   // Returns the first URL in the Phylogenetic Tree field, or null.
   function phylogeneticTreeUrl( ) {
     const ofvEl = [...document.querySelectorAll( ".ObservationFieldValue" )]
-      .find( el => fieldName( el ) === "phylogenetic tree" );
+      .find( el => fieldName( el ) === ITN.TREE_FIELD );
     const valueEl = ofvEl && ofvEl.querySelector( ":scope > .value" );
     if ( !valueEl ) return null;
     const link = valueEl.querySelector( "a[href^='http']" );
     if ( link ) return link.href;
-    const m = valueEl.textContent.match( /https?:\/\/\S+/ );
-    return m ? m[0] : null;
-  }
-
-  async function apiGet( path ) {
-    const resp = await fetch( `${API}${path}` );
-    if ( !resp.ok ) throw new Error( `iNat API returned ${resp.status}` );
-    return resp.json( );
-  }
-
-  // Returns an existing taxon with exactly this name, or null.
-  async function findExistingTaxon( name ) {
-    const data = await apiGet( `/taxa?is_active=any&per_page=30&q=${encodeURIComponent( name )}` );
-    const lower = name.toLowerCase( );
-    return data.results.find( t => t.name.toLowerCase( ) === lower ) || null;
-  }
-
-  // Returns the parent taxon (exact name, above species rank), preferring
-  // active taxa within Fungi.
-  async function findParentTaxon( parentName ) {
-    const data = await apiGet( `/taxa?is_active=any&per_page=30&q=${encodeURIComponent( parentName )}` );
-    const lower = parentName.toLowerCase( );
-    const candidates = data.results.filter( t => (
-      t.name.toLowerCase( ) === lower && t.rank_level > 10
-    ) );
-    const score = t => ( t.is_active ? 2 : 0 )
-      + ( ( t.ancestor_ids || [] ).includes( ITN.FUNGI_ID ) ? 1 : 0 );
-    candidates.sort( ( a, b ) => score( b ) - score( a ) );
-    return candidates[0] || null;
+    return ITN.firstUrl( valueEl.textContent );
   }
 
   function setStatus( container, message, kind ) {
@@ -65,20 +34,17 @@
     const name = ITN.normalizeName( rawName );
     setStatus( container, "" );
 
-    if ( !name.includes( "'" ) ) {
-      setStatus( container, `"${name}" is not a provisional name (no single quote).`, "error" );
+    const invalid = ITN.validateName( name );
+    if ( invalid ) {
+      setStatus( container, invalid, "error" );
       return;
     }
-    if ( !ITN.PROVISIONAL_NAME_FORMAT.test( name ) ) {
-      setStatus( container, `"${name}" is not in the format Genus sp. 'epithet'.`, "error" );
-      return;
-    }
-    const parentName = name.split( " " )[0];
+    const parentName = ITN.parentNameOf( name );
 
     button.disabled = true;
     setStatus( container, "Checking iNaturalist…" );
     try {
-      const existing = await findExistingTaxon( name );
+      const existing = await ITN.findExistingTaxon( name );
       if ( existing ) {
         container.querySelector( ".itn-status" ).innerHTML = "";
         const link = document.createElement( "a" );
@@ -89,17 +55,17 @@
         container.querySelector( ".itn-status" ).className = "itn-status itn-ok";
         return;
       }
-      const parent = await findParentTaxon( parentName );
+      const parent = await ITN.findParentTaxon( parentName );
       if ( !parent ) {
         setStatus( container, `Parent taxon "${parentName}" not found on iNaturalist.`, "error" );
         return;
       }
+      const treeUrl = phylogeneticTreeUrl( );
       const payload = {
         name,
         parentName: parent.name,
         parentId: parent.id,
-        observationUrl: `https://www.inaturalist.org/observations/${observationId( )}`,
-        treeUrl: phylogeneticTreeUrl( )
+        comment: ITN.buildComment( [ITN.observationUrl( observationId( ) )], treeUrl ? [treeUrl] : [] )
       };
       const hash = `${ITN.HASH_KEY}=${encodeURIComponent( JSON.stringify( payload ) )}`;
       window.open( `https://www.inaturalist.org/taxa/new#${hash}`, "_blank" );
@@ -114,7 +80,7 @@
   function decorate( ) {
     if ( !observationId( ) ) return;
     document.querySelectorAll( ".ObservationFieldValue" ).forEach( ofvEl => {
-      if ( !FIELD_NAMES.includes( fieldName( ofvEl ) ) ) return;
+      if ( !ITN.NAME_FIELDS.includes( fieldName( ofvEl ) ) ) return;
       if ( ofvEl.querySelector( ".itn-container" ) ) return;
       const valueEl = ofvEl.querySelector( ":scope > .value" );
       if ( !valueEl ) return;

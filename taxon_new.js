@@ -1,5 +1,6 @@
 // Runs on https://www.inaturalist.org/taxa/new. If the page was opened by the
-// observation-page button, fill in the new provisional taxon form.
+// observation-page button or the batch page, fill in the new provisional
+// taxon form, and for batch auto-create, submit it.
 ( async ( ) => {
   const prefix = `#${ITN.HASH_KEY}=`;
   if ( !window.location.hash.startsWith( prefix ) ) return;
@@ -12,6 +13,17 @@
   }
   // Drop the hash so a reload doesn't re-run the automation.
   history.replaceState( null, "", window.location.pathname + window.location.search );
+
+  const isBatch = !!data.batchId;
+  if ( isBatch ) {
+    // Lets taxon_result.js report the outcome after the form is saved.
+    sessionStorage.setItem( ITN.PENDING_KEY, JSON.stringify( {
+      batchId: data.batchId,
+      key: data.key,
+      name: data.name,
+      autoSubmit: !!data.autoSubmit
+    } ) );
+  }
 
   const banner = document.createElement( "div" );
   banner.style.cssText = "position:fixed;top:10px;right:10px;z-index:10000;"
@@ -28,7 +40,16 @@
       banner.style.borderColor = "#c0392b";
     }
   };
-  const fail = msg => say( msg, false );
+  // fatal: the problem will affect every name, so the batch should stop.
+  const fail = ( msg, fatal = false ) => {
+    say( msg, false );
+    if ( isBatch && data.autoSubmit ) {
+      sessionStorage.removeItem( ITN.PENDING_KEY );
+      ITN.ext.runtime.sendMessage( {
+        type: "itn-result", batchId: data.batchId, key: data.key, ok: false, error: msg, fatal
+      } ).catch( ( ) => {} );
+    }
+  };
 
   const nameInput = document.getElementById( "taxon_name" );
   const rankSelect = document.getElementById( "taxon_rank" );
@@ -36,7 +57,7 @@
   const parentId = document.getElementById( "taxon_parent_id" );
   const comment = document.getElementById( "taxon_audit_comment" );
   if ( !nameInput || !rankSelect || !parentName || !parentId ) {
-    fail( "could not find the taxon form (are you logged in as a curator?)" );
+    fail( "could not find the taxon form (are you logged in as a curator? If iNaturalist showed a security check, complete it, then retry)", true );
     return;
   }
 
@@ -51,8 +72,7 @@
 
   // Why are you making this change?
   if ( comment ) {
-    comment.value = data.observationUrl
-      + ( data.treeUrl ? `\n\nSee phylogenetic tree ${data.treeUrl}` : "" );
+    comment.value = data.comment;
     fire( comment, "input" );
   }
 
@@ -98,6 +118,22 @@
     return;
   }
   if ( !provisional.checked ) provisional.click( );
+
+  if ( isBatch && data.autoSubmit ) {
+    // Make sure nothing changed the form before saving it.
+    if ( nameInput.value !== data.name || parentId.value !== parentIdStr || !provisional.checked ) {
+      fail( "form did not fill in as expected; not saving" );
+      return;
+    }
+    const submit = nameInput.form.querySelector( "input[type=submit], button[type=submit]" );
+    if ( !submit ) {
+      fail( "Save Changes button not found" );
+      return;
+    }
+    say( "saving…" );
+    submit.click( );
+    return;
+  }
 
   say( "form filled in. Review it, then click Save Changes.", true );
   nameInput.scrollIntoView( { block: "center" } );

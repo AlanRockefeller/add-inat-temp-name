@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>iNat Temp Names: Batch</title>
+  <link rel="stylesheet" href="batch.css">
+</head>
+<body>
+  <main>
+    <h1>Batch add temp names</h1>
+    <p class="hint">
+      Paste observation numbers or URLs (one per line), and/or iNaturalist observation search URLs,
+      e.g. <code>https://www.inaturalist.org/observations?user_id=you&amp;field:Provisional%20Species%20Name=&amp;without_field=New%20Temporary%20Name%20Created</code>
+    </p>
+    <textarea id="input" rows="8" spellcheck="false"
+      placeholder="334924034&#10;https://www.inaturalist.org/observations/334924034&#10;https://www.inaturalist.org/observations?project_id=..."></textarea>
+    <div class="row">
+      <button id="load" type="button">Load observations</button>
+      <span id="loadStatus" class="status"></span>
+    </div>
+
+    <section id="results" hidden>
+      <div id="summary" class="summary"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAll" title="Select all ready names"></th>
+              <th>Name</th>
+              <th>Parent</th>
+              <th>Observations</th>
+              <th>Tree</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div id="noName" class="hint"></div>
+
+      <div class="controls">
+        <label class="auto">
+          <input type="checkbox" id="autoCreate">
+          Create automatically (click Save for every selected name without stopping to review each form)
+        </label>
+        <div class="row">
+          <button id="start" type="button" class="primary">Start</button>
+          <button id="skip" type="button" hidden>Skip this name</button>
+          <button id="stop" type="button" hidden>Stop</button>
+          <span id="runStatus" class="status"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="common.js"></script>
+  <script src="batch.js"></script>
+</body>
+</html>

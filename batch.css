@@ -1,0 +1,170 @@
+:root {
+  --bg: #ffffff;
+  --fg: #222222;
+  --muted: #666666;
+  --border: #d0d0d0;
+  --row-alt: #f6f6f6;
+  --accent: #74ac00;
+  --accent-fg: #ffffff;
+  --ok: #2e7d32;
+  --error: #c0392b;
+  --warn: #9a6700;
+  --code-bg: #f0f0f0;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1c;
+    --fg: #e6e6e6;
+    --muted: #a0a0a0;
+    --border: #3a3a3a;
+    --row-alt: #242424;
+    --ok: #7bc47f;
+    --error: #ef7f72;
+    --warn: #e0b94f;
+    --code-bg: #2a2a2a;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.45 system-ui, sans-serif;
+}
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+h1 {
+  font-size: 22px;
+  margin: 8px 0 12px;
+}
+
+code {
+  background: var(--code-bg);
+  padding: 1px 4px;
+  border-radius: 3px;
+  word-break: break-all;
+}
+
+.hint {
+  color: var(--muted);
+}
+
+textarea {
+  box-sizing: border-box;
+  width: 100%;
+  font: 13px/1.4 ui-monospace, monospace;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+button {
+  font: inherit;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--row-alt);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.status {
+  color: var(--muted);
+}
+
+.summary {
+  margin: 16px 0 8px;
+  font-weight: 600;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+tbody tr:nth-child(even) {
+  background: var(--row-alt);
+}
+
+tr.current {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+td.obs a,
+td.tree a {
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.st-ready { color: var(--fg); }
+.st-checking { color: var(--muted); }
+.st-created,
+.st-exists { color: var(--ok); }
+.st-invalid,
+.st-noparent,
+.st-failed,
+.st-error { color: var(--error); }
+.st-working,
+.st-skipped { color: var(--warn); }
+
+.controls {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+label.auto {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+a {
+  color: var(--accent);
+}
+
+#noName {
+  white-space: pre-line;
+  margin-top: 8px;
+}
