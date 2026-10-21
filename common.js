@@ -96,17 +96,23 @@ const ITN = {
     return data.results.find( t => t.name.toLowerCase( ) === lower ) || null;
   },
 
-  // Returns the parent taxon (exact name, above species rank), preferring
-  // active taxa within Fungi.
+  // Returns { parent } for the parent taxon (exact name, above species rank,
+  // active, within Fungi), or { error } explaining why there isn't one.
+  // Provisional taxa must descend from Fungi, and iNat rejects an active
+  // taxon under an inactive parent.
   async findParentTaxon( parentName ) {
     const data = await ITN.apiGet( `/taxa?is_active=any&per_page=30&q=${encodeURIComponent( parentName )}` );
     const lower = parentName.toLowerCase( );
-    const candidates = data.results.filter( t => (
-      t.name.toLowerCase( ) === lower && t.rank_level > 10
+    const fungal = data.results.filter( t => (
+      t.name.toLowerCase( ) === lower
+      && t.rank_level > 10
+      && ( t.ancestor_ids || [] ).includes( ITN.FUNGI_ID )
     ) );
-    const score = t => ( t.is_active ? 2 : 0 )
-      + ( ( t.ancestor_ids || [] ).includes( ITN.FUNGI_ID ) ? 1 : 0 );
-    candidates.sort( ( a, b ) => score( b ) - score( a ) );
-    return candidates[0] || null;
+    const parent = fungal.find( t => t.is_active );
+    if ( parent ) return { parent };
+    if ( fungal.length > 0 ) {
+      return { error: `Parent "${parentName}" is inactive on iNaturalist (taxon ${fungal[0].id}).` };
+    }
+    return { error: `Parent taxon "${parentName}" not found in Fungi on iNaturalist.` };
   }
 };

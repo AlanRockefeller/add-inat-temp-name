@@ -55,9 +55,9 @@
         container.querySelector( ".itn-status" ).className = "itn-status itn-ok";
         return;
       }
-      const parent = await ITN.findParentTaxon( parentName );
+      const { parent, error } = await ITN.findParentTaxon( parentName );
       if ( !parent ) {
-        setStatus( container, `Parent taxon "${parentName}" not found on iNaturalist.`, "error" );
+        setStatus( container, error, "error" );
         return;
       }
       const treeUrl = phylogeneticTreeUrl( );
@@ -68,8 +68,19 @@
         comment: ITN.buildComment( [ITN.observationUrl( observationId( ) )], treeUrl ? [treeUrl] : [] )
       };
       const hash = `${ITN.HASH_KEY}=${encodeURIComponent( JSON.stringify( payload ) )}`;
-      window.open( `https://www.inaturalist.org/taxa/new#${hash}`, "_blank" );
-      setStatus( container, "Opened new taxon form.", "ok" );
+      const formUrl = `https://www.inaturalist.org/taxa/new#${hash}`;
+      // The API checks can outlast the click's user activation, in which case
+      // the browser blocks the popup. Then offer a link, which is a fresh click.
+      if ( window.open( formUrl, "_blank" ) ) {
+        setStatus( container, "Opened new taxon form.", "ok" );
+      } else {
+        const status = container.querySelector( ".itn-status" );
+        status.replaceChildren( "The browser blocked the new tab. ", Object.assign(
+          document.createElement( "a" ),
+          { href: formUrl, target: "_blank", textContent: "Open the new taxon form" }
+        ) );
+        status.className = "itn-status itn-error";
+      }
     } catch ( e ) {
       setStatus( container, `Error: ${e.message}`, "error" );
     } finally {

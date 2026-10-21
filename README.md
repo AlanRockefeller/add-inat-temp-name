@@ -36,8 +36,8 @@ click it, the extension:
    upper and lower case and includes inactive taxa. If the name already exists, the button shows a link
    to that taxon instead.
 3. **Looks up the parent taxon.** The parent is the first word of the name, for example `Pezizellaceae`. If
-   more than one taxon has that name, it prefers an active one within Fungi. If no parent can be found,
-   you get an error message.
+   more than one taxon has that name, it uses the active one within Fungi. If there isn't one, you get an
+   error message that says whether the parent is missing, only exists outside Fungi, or is inactive.
 4. **Opens a new tab** with the iNaturalist "Create New Taxon" form
    (`https://www.inaturalist.org/taxa/new`). The observation page stays open.
 
@@ -92,7 +92,7 @@ Click the extension's icon in the browser toolbar to open the **Batch add temp n
    | Ready | Valid, doesn't exist yet, and the parent was found. Selected by default |
    | Already exists | Links to the existing taxon |
    | Bad format | Not in the form `Genus sp. 'epithet'` |
-   | Parent not found | No taxon on iNaturalist matches the first word of the name |
+   | No valid parent | No active taxon in Fungi matches the first word of the name. The status says whether the match is missing, outside Fungi, or inactive |
 
    Observations with neither field, or that couldn't be loaded, are listed under the table.
 3. **Review the table** and untick any names you don't want to create.

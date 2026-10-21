@@ -153,9 +153,9 @@
         if ( !parents.has( parentKey ) ) {
           parents.set( parentKey, await ITN.findParentTaxon( parentName ) );
         }
-        const parent = parents.get( parentKey );
+        const { parent, error } = parents.get( parentKey );
         if ( !parent ) {
-          setStatus( item, "noparent", `Parent "${parentName}" not found on iNaturalist` );
+          setStatus( item, "noparent", error );
           continue;
         }
         item.parent = parent;
@@ -260,7 +260,7 @@
       exists: "already exist",
       failed: "failed",
       invalid: "bad format",
-      noparent: "parent not found",
+      noparent: "no valid parent",
       error: "errors",
       skipped: "skipped",
       checking: "checking",
