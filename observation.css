@@ -1,0 +1,19 @@
+.itn-container {
+  margin: 2px 0 6px;
+}
+
+.itn-container .itn-button {
+  margin-right: 6px;
+}
+
+.itn-status {
+  font-size: 12px;
+}
+
+.itn-status.itn-error {
+  color: #c0392b;
+}
+
+.itn-status.itn-ok {
+  color: #2e7d32;
+}
