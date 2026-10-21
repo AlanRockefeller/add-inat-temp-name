@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "iNat Add Temp Name",
+  "version": "0.1",
+  "description": "Adds a button next to Provisional Species Name / Species Name Override observation fields to create the provisional taxon on iNaturalist.",
+  "host_permissions": [
+    "https://www.inaturalist.org/*",
+    "https://api.inaturalist.org/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.inaturalist.org/observations/*"],
+      "js": ["common.js", "observation.js"],
+      "css": ["observation.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.inaturalist.org/taxa/new*"],
+      "js": ["common.js", "taxon_new.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "inat-add-temp-name@alanrockefeller",
+      "strict_min_version": "109.0"
+    }
+  }
+}
